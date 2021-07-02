@@ -1,17 +1,40 @@
 version: "3.8"
 
-networks:
-    boilerplate:
-      driver: bridge
-
-services: 
+services:
     api:
-        build: 
+        container_name: api
+        restart: always
+        env_file:
+            - .env
+        build:
             context: .
             dockerfile: ./infrastructure/node/Dockerfile
-        ports: 
-            - 3000:3000
+        volumes:
+            - ./application:/usr/app
+        depends_on: 
+            - db
+        links:
+            - db
+        ports:
+            - ${APP_PORT}:${APP_PORT}
+        command: npm run start
+    
+    db:
+        container_name: mongo
+        restart: always
+        env_file:
+            - .env
+        build:
+            context: .
+            dockerfile: ./infrastructure/mongo/Dockerfile
+        ports:
+            - ${DB_PORT}:27017
         volumes: 
-            - .:/usr/app
-        networks:
-          - boilerplate
+            - dbdata-volume:/data/db
+        environment: 
+            MONGO_INITDB_USERNAME: ${DB_USERNAME}
+            MONGO_INITDB_PASWWORD: ${DB_PASSWORD}
+
+volumes: 
+    dbdata-volume:
+         
